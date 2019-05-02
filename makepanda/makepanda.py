@@ -1015,6 +1015,8 @@ if (COMPILER=="GCC"):
         LibName("COCOA", "-framework Cocoa")
         # Fix for a bug in OSX Leopard:
         LibName("GL", "-dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib")
+        if not PkgSkip("ROCKET"):
+            LibName("ROCKET", "-undefined dynamic_lookup")
 
     if GetTarget() == 'android':
         LibName("ALWAYS", '-llog')
@@ -1814,9 +1816,11 @@ def CompileLink(dll, obj, opts):
                 cmd += ' -Wl,--allow-shlib-undefined'
         else:
             if (GetTarget() == "darwin"):
-                cmd = cxx + ' -undefined dynamic_lookup'
-                if ("BUNDLE" in opts or GetOrigExt(dll) == ".pyd"):
-                    cmd += ' -bundle '
+                cmd = cxx
+                if GetOrigExt(dll) == ".pyd":
+                    cmd += ' -bundle -undefined dynamic_lookup'
+                elif "BUNDLE" in opts:
+                    cmd += ' -bundle'
                 else:
                     install_name = '@loader_path/../lib/' + os.path.basename(dll)
                     cmd += ' -dynamiclib -install_name ' + install_name
